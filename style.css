@@ -1,0 +1,17 @@
+body {
+    background-color: #f4f6f9;
+}
+.card {
+    border-radius: 10px;
+    border: none;
+}
+.card-header {
+    border-top-left-radius: 10px;
+    border-top-right-radius: 10px;
+}
+label {
+    font-weight: 600;
+    margin-bottom: 5px;
+    font-size: 0.9rem;
+    color: #495057;
+}
