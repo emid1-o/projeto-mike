@@ -1,13 +1,9 @@
 document.getElementById('diagnosticoForm').addEventListener('submit', function(event) {
-    event.preventDefault(); // Evita que a página recarregue
+    event.preventDefault();
 
-    // Captura os dados do formulário usando FormData
     const formData = new FormData(this);
-    
-    // Constrói o conteúdo em HTML para o PDF
     let htmlContent = '';
-    
-    // Lista de mapeamento das perguntas para ficar bonito no PDF
+
     const perguntas = {
         comunidade: "Nome da comunidade",
         municipio: "Município/UF",
@@ -31,33 +27,39 @@ document.getElementById('diagnosticoForm').addEventListener('submit', function(e
         perdasPossiveis: "O que perderia caso tivesse que deixar a área"
     };
 
-    // Gera os parágrafos com Pergunta em negrito e a Resposta
+    // Gera os blocos de pergunta e resposta
     for (let [chave, valor] of formData.entries()) {
         if(valor.trim() !== "") {
-            htmlContent += `<p style="margin-bottom: 10px; font-size: 14px; line-height: 1.5;">
+            // A regra page-break-inside: avoid impede que o texto corte no meio da página
+            htmlContent += `<div style="page-break-inside: avoid; margin-bottom: 15px; font-size: 14px; line-height: 1.5; text-align: justify;">
                                 <strong>${perguntas[chave]}:</strong><br> ${valor}
-                            </p>`;
+                            </div>`;
         }
     }
 
-    // Insere o conteúdo no template oculto
-    document.getElementById('pdfContent').innerHTML = htmlContent;
+    // Constrói o documento final direto no JS
+    const conteudoPDF = `
+        <div style="padding: 20px; font-family: Arial, sans-serif; color: #333;">
+            <h2 style="text-align: center; color: #0056b3; font-size: 22px; margin-bottom: 10px;">
+                Relatório de Diagnóstico de Desassentamento
+            </h2>
+            <hr style="margin-bottom: 20px;">
+            ${htmlContent}
+        </div>
+    `;
 
-    // Configurações do gerador de PDF
-    const elementoParaPDF = document.getElementById('pdfTemplate');
-    elementoParaPDF.classList.remove('d-none'); // Torna visível temporariamente para o gerador
-
+    // Novas configurações com margens reais e controle de quebra de página
     const opcoes = {
-        margin:       10,
+        margin:       [15, 15, 15, 15], // Margem [Cima, Direita, Baixo, Esquerda] em mm
         filename:     'Diagnostico_Desassentamento.pdf',
         image:        { type: 'jpeg', quality: 0.98 },
-        html2canvas:  { scale: 2 },
-        jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' }
+        html2canvas:  { scale: 2, windowWidth: 800 }, // Força uma largura para não estourar a tela
+        jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' },
+        pagebreak:    { mode: ['avoid-all', 'css', 'legacy'] }
     };
 
-    // Gera e salva o PDF
-    html2pdf().set(opcoes).from(elementoParaPDF).save().then(() => {
-        elementoParaPDF.classList.add('d-none'); // Esconde novamente após gerar
+    // Gera o PDF diretamente a partir da string HTML
+    html2pdf().set(opcoes).from(conteudoPDF).save().then(() => {
         alert("PDF gerado com sucesso!");
     });
 });
